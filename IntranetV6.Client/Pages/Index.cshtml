@@ -1,0 +1,45 @@
+﻿@page "/"
+
+@inject ApplicationState appState
+@inject IUriHelper uriHelper
+@inject Users usersService;
+
+<h1>Hello, world!</h1>
+
+@if (users.Count > 0)
+{
+  <h2>Users</h2>
+  <ul>
+    @foreach (var user in users)
+    {
+      <li>@user.FullName (@user.NickName)</li>
+    }
+  </ul>
+}
+else
+{
+  <h2>No Users Loaded.</h2>
+}
+
+<button onclick="@clickHandler">Sign Out</button>
+
+@functions
+{
+  List<User> users = new List<User>();
+
+  protected override async Task OnInitAsync()
+  {
+    await appState.CheckAndRetrieveSessionAsync(); // This is only needed on the first page access
+    appState.CheckPageAuth(); // This is used to check auth on any page that needs it
+
+    users = await usersService.FetchAllUsers();
+
+  }
+
+  private void clickHandler()
+  {
+    appState.DestroySession();
+    uriHelper.NavigateTo("/signin");
+  }
+
+}

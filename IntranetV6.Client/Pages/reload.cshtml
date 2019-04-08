@@ -1,0 +1,13 @@
+﻿@page "/reload"
+
+@inject IUriHelper uriHelper
+
+@functions
+{
+  protected override Task OnInitAsync()
+  {
+    uriHelper.NavigateTo("/");
+    return base.OnInitAsync();
+  }
+
+}

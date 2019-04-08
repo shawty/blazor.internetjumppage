@@ -1,0 +1,86 @@
+﻿@using IntranetV6.BlazorUtils
+
+@page "/signin"
+
+@inject Users usersService
+@inject ApplicationState appState
+@inject IUriHelper uriHelper
+@inject UtilsInterop jsUtils
+
+<div class="container h-100">
+  <div class="row h-100 justify-content-center align-items-center flex-column">
+    <div class="col-12 col-md-6">
+
+      <form ref="loginForm" class="@(formValidated ? "was-validated" : "needs-validation")" novalidate>
+
+        <div class="form-group">
+          <label for="loginName">Login Name</label>
+          <input type="text" class="form-control" id="loginName" placeholder="Enter login name or email here..." bind="@LoginName" required />
+          <div class="invalid-feedback">Please enter a valid login name or email to sign in.</div>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" class="form-control" id="password" placeholder="Enter password here..." bind="@Password" required />
+          <div class="invalid-feedback">Please enter a valid password to sign in.</div>
+        </div>
+
+        <button type="button" class="btn btn-primary" onclick="@SignIn">Sign-in</button>
+
+      </form>
+
+      <br /><br />
+      <div class="alert alert-danger @(LoginSucceeded ? "d-none" : "")">
+        Password and/or Username not recognised.
+      </div>
+
+    </div>
+  </div>
+</div>
+
+@functions{
+
+  private string LoginName { get; set; }
+  private string Password { get; set; }
+
+  private bool LoginSucceeded { get; set; } = true; // Set to true by default so we don't see alert
+
+  private bool formValidated = false;
+  private ElementRef loginForm { get; set; }
+  private bool _focusIsSet = false;
+
+  protected override void OnAfterRender()
+  {
+    if (!_focusIsSet)
+    {
+      jsUtils.SetFocus("loginName");
+      _focusIsSet = true; // This is need to stop focus snapping back a second time
+    }
+    base.OnAfterRender();
+  }
+
+  private async void SignIn()
+  {
+
+    var formValid = await jsUtils.IsFormValidationValid(loginForm);
+    formValidated = true;
+
+    if (!formValid) return;
+
+    var response = usersService.Authenticate(LoginName, Password);
+
+    if (response.Success)
+    {
+      // Login worked
+      LoginSucceeded = true;
+      appState.CreateSession(response);
+      uriHelper.NavigateTo("/reload");
+    }
+    else
+    {
+      // Login Failed
+      LoginSucceeded = false;
+    }
+  }
+
+}
